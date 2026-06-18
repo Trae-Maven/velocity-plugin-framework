@@ -24,6 +24,7 @@ public class UtilSearch {
     /**
      * Searches the collection for a single match, informing the audience of the outcome.
      *
+     * @param clazz             the element type's class
      * @param collection        the collection to search
      * @param typePredicate     filters which elements are eligible for matching
      * @param equalsPredicate   tests for an exact match against the input
@@ -38,9 +39,9 @@ public class UtilSearch {
      * @param <Type>            the element type
      * @return the single matching element, or an empty optional if no unambiguous match was found
      */
-    public static <Type> Optional<Type> search(final Collection<? extends Type> collection, final Predicate<Type> typePredicate, final Predicate<Type> equalsPredicate, final Predicate<Type> containsPredicate, final Consumer<List<Type>> listConsumer, final Function<String, String> colorFunction, final Function<Type, String> resultFunction, final String prefix, final Audience audience, final String input, final boolean inform) {
+    public static <Type> Optional<Type> search(final Class<Type> clazz, final Collection<? extends Type> collection, final Predicate<Type> typePredicate, final Predicate<Type> equalsPredicate, final Predicate<Type> containsPredicate, final Consumer<List<Type>> listConsumer, final Function<String, String> colorFunction, final Function<Type, String> resultFunction, final String prefix, final Audience audience, final String input, final boolean inform) {
         final Consumer<String> messageConsumer = message -> UtilMessage.message(audience, prefix, message);
 
-        return UtilCollection.search(collection, typePredicate, equalsPredicate, containsPredicate, listConsumer, messageConsumer, colorFunction, resultFunction, input, inform);
+        return UtilCollection.search(clazz, collection, typePredicate, equalsPredicate, containsPredicate, listConsumer, messageConsumer, colorFunction, resultFunction, input, inform);
     }
 }
