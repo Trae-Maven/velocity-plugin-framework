@@ -66,11 +66,11 @@ public class VelocityPlugin implements Plugin {
      */
     @Override
     public void initializePlugin() {
+        UtilPlugin.addInternalPlugin(this);
+
         Plugin.super.initializePlugin();
 
         UtilEvent.dispatchAsynchronous(this, new PluginInitializeEvent(this));
-
-        UtilPlugin.addInternalPlugin(this);
     }
 
     /**
