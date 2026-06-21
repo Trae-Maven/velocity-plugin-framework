@@ -19,10 +19,8 @@ import io.github.trae.velocity.framework.command.interfaces.IBaseCommand;
 import io.github.trae.velocity.framework.command.interfaces.SharedBaseCommand;
 import io.github.trae.velocity.framework.command.wrappers.VelocityCommandWrapper;
 import io.github.trae.velocity.framework.event.interfaces.Listener;
-import io.github.trae.velocity.framework.utility.UtilMessage;
 import lombok.Getter;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -143,7 +141,7 @@ public abstract class BaseCommand<Plugin extends VelocityPlugin, VelocityManager
         final RootCommandNode<CommandSource> rootCommandNode = (RootCommandNode<CommandSource>) event.getRootNode();
 
         // permission gate for the root command
-        if (this.permission != null && !event.getPlayer().hasPermission(this.permission)) {
+        if (!(this.hasPermission(event.getPlayer()))) {
             return;
         }
 
@@ -152,7 +150,7 @@ public abstract class BaseCommand<Plugin extends VelocityPlugin, VelocityManager
                         .suggests((context, suggestionsBuilder) -> this.buildSuggestions(this, context, suggestionsBuilder)));
 
         for (final BaseSubCommand<?, ?, ?> baseSubCommand : this.subCommands.values()) {
-            if (baseSubCommand.getPermission() != null && !event.getPlayer().hasPermission(baseSubCommand.getPermission())) {
+            if (!(baseSubCommand.hasPermission(event.getPlayer()))) {
                 continue;
             }
 
@@ -168,12 +166,12 @@ public abstract class BaseCommand<Plugin extends VelocityPlugin, VelocityManager
             }
         }
 
-        final LiteralCommandNode<CommandSource> node = literalArgumentBuilder.build();
+        final LiteralCommandNode<CommandSource> literalCommandNode = literalArgumentBuilder.build();
 
-        rootCommandNode.addChild(node);
+        rootCommandNode.addChild(literalCommandNode);
 
         for (final String alias : this.aliases) {
-            rootCommandNode.addChild(BrigadierCommand.literalArgumentBuilder(alias).redirect(node).build());
+            rootCommandNode.addChild(BrigadierCommand.literalArgumentBuilder(alias).redirect(literalCommandNode).build());
         }
     }
 
@@ -197,8 +195,6 @@ public abstract class BaseCommand<Plugin extends VelocityPlugin, VelocityManager
         final SuggestionsBuilder anchored = suggestionsBuilder.createOffset(offset);
 
         final List<String> result = command.$getTabComplete(context.getSource(), args);
-
-        UtilMessage.log("[suggest] args=" + Arrays.toString(args) + " result=" + result);
 
         for (final String suggestion : result) {
             anchored.suggest(suggestion);
