@@ -69,15 +69,15 @@ public class VelocityCommandWrapper implements SimpleCommand {
         return this.baseCommand.$getTabComplete(commandSource, args);
     }
 
-    /**
-     * Tests whether the source may use the wrapped command. Invoked by Velocity before
-     * {@link #execute}; if it returns {@code false}, handling is forwarded to the backend server.
-     *
-     * @param invocation the invocation context supplying the source
-     * @return {@code true} if the source holds the command's permission
-     */
-    @Override
-    public boolean hasPermission(final Invocation invocation) {
-        return this.baseCommand.hasPermission(invocation.source());
-    }
+//    /**
+//     * Tests whether the source may use the wrapped command. Invoked by Velocity before
+//     * {@link #execute}; if it returns {@code false}, handling is forwarded to the backend server.
+//     *
+//     * @param invocation the invocation context supplying the source
+//     * @return {@code true} if the source holds the command's permission
+//     */
+//    @Override
+//    public boolean hasPermission(final Invocation invocation) {
+//        return this.baseCommand.hasPermission(invocation.source());
+//    }
 }
