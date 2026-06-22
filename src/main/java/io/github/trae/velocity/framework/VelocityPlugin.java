@@ -1,12 +1,10 @@
 package io.github.trae.velocity.framework;
 
-import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.proxy.ProxyServer;
 import io.github.trae.di.InjectorApi;
 import io.github.trae.hf.Plugin;
 import io.github.trae.velocity.framework.command.BaseCommand;
-import io.github.trae.velocity.framework.command.BaseSubCommand;
 import io.github.trae.velocity.framework.event.interfaces.Listener;
 import io.github.trae.velocity.framework.plugin.events.PluginInitializeEvent;
 import io.github.trae.velocity.framework.plugin.events.PluginShutdownEvent;
@@ -22,8 +20,8 @@ import java.nio.file.Path;
  *
  * <p>Implements {@link Plugin} from the hierarchy framework, bridging the Velocity proxy
  * lifecycle with the component-based architecture. Automatically handles registration and
- * teardown of listeners, commands, and subcommands as components are initialized and shut
- * down through the hierarchy.</p>
+ * teardown of listeners and commands as components are initialized and shut down through the
+ * hierarchy. Subcommands register themselves against their parent command on construction.</p>
  *
  * <p>Concrete plugins extend this class and supply a constructor annotated with
  * {@code @Inject}, forwarding the injected {@link ProxyServer} and {@code @DataDirectory}
@@ -95,9 +93,9 @@ public class VelocityPlugin implements Plugin {
      * registration based on the component type:</p>
      * <ul>
      *     <li>{@link Listener} — registered with the proxy's {@code EventManager}</li>
-     *     <li>{@link BaseCommand} — registered with the proxy's {@code CommandManager} under a
-     *         {@link CommandMeta} built from its label and aliases</li>
-     *     <li>{@link BaseSubCommand} — attached to its parent command's subcommand map</li>
+     *     <li>{@link BaseCommand} — registered with the proxy's {@code CommandManager} under its
+     *         {@link CommandMeta} and a freshly built {@link BaseCommand#generateBrigadierCommand()
+     *         BrigadierCommand}</li>
      * </ul>
      *
      * @param instance the component being initialized
@@ -111,15 +109,7 @@ public class VelocityPlugin implements Plugin {
         }
 
         if (instance instanceof final BaseCommand<?, ?, ?> baseCommand) {
-            final CommandManager commandManager = this.proxyServer.getCommandManager();
-
-            final CommandMeta commandMeta = commandManager.metaBuilder(baseCommand.getLabel()).aliases(baseCommand.getAliases().toArray(new String[0])).plugin(this).build();
-
-            commandManager.register(commandMeta, baseCommand.getVelocityCommandWrapper());
-        }
-
-        if (instance instanceof final BaseSubCommand<?, ?, ?> baseSubCommand) {
-            baseSubCommand.getModule().$addSubCommand(baseSubCommand);
+            this.proxyServer.getCommandManager().register(baseCommand.getCommandMeta(), baseCommand.generateBrigadierCommand());
         }
     }
 
@@ -132,7 +122,6 @@ public class VelocityPlugin implements Plugin {
      * <ul>
      *     <li>{@link Listener} — unregistered from the proxy's {@code EventManager}</li>
      *     <li>{@link BaseCommand} — unregistered from the proxy's {@code CommandManager}</li>
-     *     <li>{@link BaseSubCommand} — removed from its parent command's subcommand map</li>
      * </ul>
      *
      * @param instance the component being shut down
@@ -144,11 +133,7 @@ public class VelocityPlugin implements Plugin {
         }
 
         if (instance instanceof final BaseCommand<?, ?, ?> baseCommand) {
-            this.proxyServer.getCommandManager().unregister(baseCommand.getLabel());
-        }
-
-        if (instance instanceof final BaseSubCommand<?, ?, ?> baseSubCommand) {
-            baseSubCommand.getModule().$removeSubCommand(baseSubCommand);
+            this.proxyServer.getCommandManager().unregister(baseCommand.getCommandMeta());
         }
 
         Plugin.super.onComponentShutdown(instance);

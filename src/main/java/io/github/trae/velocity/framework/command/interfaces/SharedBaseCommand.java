@@ -16,9 +16,9 @@ import java.util.List;
  * checking, event dispatch, and the gated execution and tab-complete entry points.
  *
  * <p>The {@code $}-prefixed methods ({@link #$execute} and {@link #$getTabComplete}) are the
- * framework-internal entry points invoked by the command wrapper. They perform sender, permission,
- * and event-cancellation gating before delegating to the user-facing {@link #execute} and
- * {@link #getTabComplete} methods.</p>
+ * framework-internal entry points invoked from the command's Brigadier node callbacks. They perform
+ * sender, permission, and event-cancellation gating before delegating to the user-facing
+ * {@link #execute} and {@link #getTabComplete} methods.</p>
  *
  * @param <Sender> the expected {@link CommandSource} type for this command
  */
@@ -133,6 +133,7 @@ public interface SharedBaseCommand<Sender extends CommandSource> {
         }
 
         this.execute(UtilJava.cast(this.getClassOfCommandSender(), commandSource), args);
+
         return true;
     }
 
