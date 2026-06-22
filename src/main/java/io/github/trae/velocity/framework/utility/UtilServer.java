@@ -47,7 +47,7 @@ public class UtilServer {
      * @param id the player's unique id
      * @return an {@link Optional} containing the player, or empty if none is connected with that id
      */
-    public static Optional<Player> getPlayerById(final UUID id) {
+    public static Optional<Player> getOnlinePlayerById(final UUID id) {
         return UtilPlugin.getInstance().getProxyServer().getPlayer(id);
     }
 
@@ -57,7 +57,7 @@ public class UtilServer {
      * @param name the player's username
      * @return an {@link Optional} containing the player, or empty if none is connected with that name
      */
-    public static Optional<Player> getPlayerByName(final String name) {
+    public static Optional<Player> getOnlinePlayerByName(final String name) {
         return UtilPlugin.getInstance().getProxyServer().getPlayer(name);
     }
 }
