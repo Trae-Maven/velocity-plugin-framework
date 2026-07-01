@@ -4,8 +4,8 @@ import com.velocitypowered.api.command.CommandSource;
 import io.github.trae.hf.SubModule;
 import io.github.trae.velocity.framework.VelocityPlugin;
 import io.github.trae.velocity.framework.command.interfaces.SharedBaseCommand;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.List;
 
@@ -13,45 +13,23 @@ import java.util.List;
  * Abstract base class for subcommands belonging to a {@link BaseCommand}.
  *
  * <p>Combines {@link SubModule} and {@link SharedBaseCommand} to provide a typed subcommand with
- * its own sender validation, permission check, and tab-complete logic. On construction the subcommand
- * registers itself against its parent command via
- * {@link io.github.trae.velocity.framework.command.interfaces.IBaseCommand#$addSubCommand}.</p>
+ * its own sender validation, permission check, and tab-complete logic. Registration against the
+ * parent command is handled by the plugin's component lifecycle
+ * ({@link VelocityPlugin#onComponentInitialize(Object)} calls
+ * {@link io.github.trae.velocity.framework.command.interfaces.IBaseCommand#$addSubCommand}), not by
+ * this class.</p>
  *
  * @param <Plugin>        the plugin type this subcommand belongs to
  * @param <ParentCommand> the parent {@link BaseCommand} type
  * @param <Sender>        the expected {@link CommandSource} type
  */
+@AllArgsConstructor
 @Getter
 public abstract class BaseSubCommand<Plugin extends VelocityPlugin, ParentCommand extends BaseCommand<Plugin, ?, ?>, Sender extends CommandSource> implements SubModule<Plugin, ParentCommand>, SharedBaseCommand<Sender> {
 
     private final String label, description;
     private final List<String> aliases;
     private final String permission;
-
-    /**
-     * Display order for this subcommand in tab-completion suggestions; lower values appear first.
-     * Defaults to {@link Integer#MAX_VALUE} so unset subcommands sort last. Set via
-     * {@link #setIndex(int)} from the subclass constructor.
-     */
-    @Setter
-    private int index = Integer.MAX_VALUE;
-
-    /**
-     * Constructs a subcommand with a permission node and registers it against its parent command.
-     *
-     * @param label       the primary label used to invoke this subcommand
-     * @param description a short description of this subcommand
-     * @param aliases     alternative labels for this subcommand
-     * @param permission  the permission node required to use this subcommand, or {@code null} for none
-     */
-    public BaseSubCommand(final String label, final String description, final List<String> aliases, final String permission) {
-        this.label = label;
-        this.description = description;
-        this.aliases = aliases;
-        this.permission = permission;
-
-        this.getModule().$addSubCommand(this);
-    }
 
     /**
      * Constructs a subcommand without a permission node.
@@ -62,7 +40,6 @@ public abstract class BaseSubCommand<Plugin extends VelocityPlugin, ParentComman
      * @param label       the primary label used to invoke this subcommand
      * @param description a short description of this subcommand
      * @param aliases     alternative labels for this subcommand
-     * @see #BaseSubCommand(String, String, java.util.List, String)
      */
     public BaseSubCommand(final String label, final String description, final List<String> aliases) {
         this(label, description, aliases, null);
