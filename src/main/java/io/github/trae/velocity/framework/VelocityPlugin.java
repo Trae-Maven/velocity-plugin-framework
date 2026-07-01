@@ -5,7 +5,9 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import io.github.trae.di.InjectorApi;
 import io.github.trae.hf.Plugin;
 import io.github.trae.velocity.framework.command.BaseCommand;
+import io.github.trae.velocity.framework.command.BaseSubCommand;
 import io.github.trae.velocity.framework.event.interfaces.Listener;
+import io.github.trae.velocity.framework.framework.IVelocityPlugin;
 import io.github.trae.velocity.framework.plugin.events.PluginInitializeEvent;
 import io.github.trae.velocity.framework.plugin.events.PluginShutdownEvent;
 import io.github.trae.velocity.framework.utility.UtilEvent;
@@ -14,6 +16,8 @@ import io.github.trae.velocity.framework.utility.UtilTask;
 import lombok.Getter;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Base class for all Velocity plugins using the framework.
@@ -30,10 +34,12 @@ import java.nio.file.Path;
  * initialize and shutdown events.</p>
  */
 @Getter
-public class VelocityPlugin implements Plugin {
+public class VelocityPlugin implements Plugin, IVelocityPlugin {
 
     private final ProxyServer proxyServer;
     private final Path dataDirectory;
+
+    private final List<BaseCommand<?, ?, ?>> pendingBaseCommands = new ArrayList<>();
 
     /**
      * Creates a new {@link VelocityPlugin} and configures the dependency injection framework
@@ -67,6 +73,8 @@ public class VelocityPlugin implements Plugin {
         UtilPlugin.addInternalPlugin(this);
 
         Plugin.super.initializePlugin();
+
+        this.processComponents();
 
         UtilEvent.dispatchAsynchronous(this, new PluginInitializeEvent(this));
     }
@@ -109,7 +117,11 @@ public class VelocityPlugin implements Plugin {
         }
 
         if (instance instanceof final BaseCommand<?, ?, ?> baseCommand) {
-            this.proxyServer.getCommandManager().register(baseCommand.getCommandMeta(), baseCommand.generateBrigadierCommand());
+            this.pendingBaseCommands.add(baseCommand);
+        }
+
+        if (instance instanceof final BaseSubCommand<?, ?, ?> baseSubCommand) {
+            baseSubCommand.getModule().$addSubCommand(baseSubCommand);
         }
     }
 
@@ -136,6 +148,16 @@ public class VelocityPlugin implements Plugin {
             this.proxyServer.getCommandManager().unregister(baseCommand.getCommandMeta());
         }
 
+        if (instance instanceof final BaseSubCommand<?, ?, ?> baseSubCommand) {
+            baseSubCommand.getModule().$removeSubCommand(baseSubCommand);
+        }
+
         Plugin.super.onComponentShutdown(instance);
+    }
+
+    @Override
+    public void processComponents() {
+        this.pendingBaseCommands.forEach(baseCommand -> this.proxyServer.getCommandManager().register(baseCommand.getCommandMeta(), baseCommand.generateBrigadierCommand()));
+        this.pendingBaseCommands.clear();
     }
 }
