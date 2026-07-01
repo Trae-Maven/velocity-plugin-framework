@@ -3,6 +3,8 @@ package io.github.trae.velocity.framework.command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.context.StringRange;
+import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -291,12 +293,21 @@ public abstract class BaseCommand<Plugin extends VelocityPlugin, VelocityManager
 
         final String current = args[args.length - 1];
         final int offset = input.length() - current.length();
-        final SuggestionsBuilder anchored = suggestionsBuilder.createOffset(offset);
 
-        for (final String suggestion : sharedBaseCommand.$getTabComplete(commandContext.getSource(), args)) {
-            anchored.suggest(suggestion);
+        // Build the Suggestions object directly instead of going through
+        // SuggestionsBuilder#suggest / #build, whose build() step sorts entries
+        // alphabetically (Suggestion#compareToIgnoreCase) and discards insertion
+        // order. Constructing Suggestions with our own ordered list bypasses that
+        // sort, so the order returned by $getTabComplete is preserved.
+        final StringRange range = StringRange.between(offset, input.length());
+
+        final List<String> completions = sharedBaseCommand.$getTabComplete(commandContext.getSource(), args);
+
+        final List<Suggestion> ordered = new ArrayList<>(completions.size());
+        for (final String completion : completions) {
+            ordered.add(new Suggestion(range, completion));
         }
 
-        return anchored.buildFuture();
+        return CompletableFuture.completedFuture(new Suggestions(range, ordered));
     }
 }
