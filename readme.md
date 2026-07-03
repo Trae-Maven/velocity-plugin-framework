@@ -18,7 +18,7 @@ Velocity-Plugin-Framework bridges the Velocity proxy lifecycle with the componen
 - Adventure-native — built directly on Velocity's `Audience`/`Component` model
 - Custom event base classes with allow/deny cancellation semantics on top of Velocity's `ResultedEvent`
 - `EventPriority` constants mapped to Velocity's descending `PostOrder` model
-- Designed for modern Java (Java 21+)
+- Designed for modern Java (Java 25+)
 
 ---
 
@@ -43,7 +43,7 @@ Commands integrate directly into the hierarchy as Modules, and subcommands as Su
 
 ## Requirements
 
-Velocity-Plugin-Framework requires Java 21+ and the Velocity API.
+Velocity-Plugin-Framework requires Java 25+ and the Velocity API.
 
 The following is only needed at compile time for annotation processing:
 ```xml
@@ -219,7 +219,7 @@ UtilEvent.dispatchAsynchronous(new MyEvent());
 // Fire and inspect after all handlers run
 MyEvent event = UtilEvent.supplyAsynchronous(new MyEvent());
 if (event.isCancelled()) {
-    return;
+        return;
 }
 ```
 
@@ -231,22 +231,22 @@ thread, everything else schedules onto the pool:
 ```java
 // Execute inline on the calling thread
 UtilTask.execute(() -> {
-    // immediate work
+        // immediate work
 });
 
 // Schedule onto the proxy's thread pool
 UtilTask.executeAsynchronous(() -> {
-    // background work or I/O
+        // background work or I/O
 });
 
 // Delayed task
 UtilTask.executeLaterAsynchronous(() -> {
-    player.sendMessage(Component.text("5 seconds later"));
+        player.sendMessage(Component.text("5 seconds later"));
 }, 5, ChronoUnit.SECONDS);
 
 // Repeating task with cancellation
 UtilTask.scheduleAsynchronous(() -> {
-    // periodic work
+        // periodic work
 }, 0, 5, ChronoUnit.SECONDS, () -> !player.isActive());
 ```
 
@@ -261,7 +261,7 @@ UtilMessage.message(player, "Network", "You connected to <aqua>%s</aqua>.".forma
 UtilMessage.message(player, "Shop", "<gold>+50 coins</gold> from daily reward!");
 
 // Message a collection of players with an ignore list
-UtilMessage.message(players, "Punish", "<yellow>%s</yellow> banned <yellow>%s</yellow>.".formatted(sender.getUsername(), target.getUsername()), List.of(targetUuid));
+UtilMessage.message(playerList, "Punish", "<yellow>%s</yellow> banned <yellow>%s</yellow>.".formatted(sender.getUsername(), target.getUsername()), List.of(targetUuid));
 
 // Broadcast to all online players
 UtilMessage.broadcast("Network", "<red><bold>Restarting</bold></red> in <yellow>5 minutes</yellow>.");
