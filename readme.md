@@ -26,18 +26,18 @@ Velocity-Plugin-Framework bridges the Velocity proxy lifecycle with the componen
 ```
 VelocityPlugin (implements Plugin)
   └─ Manager
-       └─ BaseCommand / Module
-            └─ BaseSubCommand / SubModule
+       └─ BaseCommand (Node under the Manager)
+            └─ BaseSubCommand (Node under the command)
 ```
 
-Commands integrate directly into the hierarchy as Modules, and subcommands as SubModules:
+Commands and subcommands integrate directly into the hierarchy as Nodes, each with typed access to its parent:
 
 | Component | Hierarchy Role | Velocity Integration |
 |---|---|---|
 | `VelocityPlugin` | Plugin | Proxy lifecycle bridge, component registration |
 | `Manager` | Manager | Organizational grouping |
-| `BaseCommand` | Module | Registered with `CommandManager` |
-| `BaseSubCommand` | SubModule | Attached to parent command |
+| `BaseCommand` | Node under a Manager | Registered with `CommandManager` |
+| `BaseSubCommand` | Node under a command | Attached to parent command |
 
 ---
 
@@ -61,7 +61,7 @@ The following is only needed at compile time for annotation processing:
 
 Velocity-Plugin-Framework depends on the following libraries, which are included automatically through Maven:
 
-- [Hierarchy-Framework](https://github.com/Trae-Maven/hierarchy-framework) – Plugin, Manager, Module, SubModule hierarchy with lifecycle management.
+- [Hierarchy-Framework](https://github.com/Trae-Maven/hierarchy-framework) – Plugin, Manager, and Node hierarchy with lifecycle management.
 - [Dependency Injector](https://github.com/Trae-Maven/dependency-injector) – Container management, classpath scanning, and component wiring.
 - [Utilities](https://github.com/Trae-Maven/utilities) – Generic type resolution, string utilities, and casting helpers.
 
@@ -136,7 +136,8 @@ public class CorePlugin extends VelocityPlugin {
 
 ### Defining a Command
 
-Extend `BaseCommand` with the appropriate sender type. Permission is passed via the constructor:
+Extend `BaseCommand` with the appropriate sender type. The second type parameter names the owning
+Manager, which the command resolves through `getParent()`. Permission is passed via the constructor:
 ```java
 @Component
 public class AccountCommand extends BaseCommand<CorePlugin, AccountManager, CommandSource> {
@@ -159,15 +160,17 @@ public class AccountCommand extends BaseCommand<CorePlugin, AccountManager, Comm
 
 ### Defining a SubCommand
 
-SubCommands are automatically attached to their parent command through the hierarchy:
+The second type parameter names the parent command. Subcommands are attached to that parent
+automatically as each component is initialized, and the parent's Brigadier node tree is built
+once every subcommand has attached:
 
 ```java
 @Component
-public class AccountAdminSubCommand extends BaseSubCommand<CorePlugin, AccountCommand, Player> {
+public class AdminSubCommand extends BaseSubCommand<CorePlugin, AccountCommand, Player> {
 
     private final AccountManager accountManager;
 
-    public AccountAdminSubCommand(final AccountManager accountManager) {
+    public AdminSubCommand(final AccountManager accountManager) {
         super("admin", "Toggle Admin Mode", Collections.emptyList(), "core.commands.account.admin");
 
         this.accountManager = accountManager;
@@ -412,6 +415,7 @@ All command events are cancellable. Cancelling an execute event prevents executi
 | Interface | Description |
 |---|---|
 | `Plugin` | Hierarchy root with automatic registration callbacks (provided by Hierarchy-Framework; `VelocityPlugin` implements it) |
+| `Node` | Typed parent access for commands and subcommands (provided by Hierarchy-Framework) |
 | `Listener` | Marker for components auto-registered with the proxy's `EventManager` |
 | `Event` | Marker for all framework events |
 | `SharedBaseCommand` | Shared contract between commands and subcommands — sender validation, permission, execution, and tab-complete |

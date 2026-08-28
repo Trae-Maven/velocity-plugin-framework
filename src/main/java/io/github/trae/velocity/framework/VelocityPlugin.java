@@ -7,7 +7,6 @@ import io.github.trae.hf.Plugin;
 import io.github.trae.velocity.framework.command.BaseCommand;
 import io.github.trae.velocity.framework.command.BaseSubCommand;
 import io.github.trae.velocity.framework.event.interfaces.Listener;
-import io.github.trae.velocity.framework.framework.IVelocityPlugin;
 import io.github.trae.velocity.framework.plugin.events.PluginInitializeEvent;
 import io.github.trae.velocity.framework.plugin.events.PluginShutdownEvent;
 import io.github.trae.velocity.framework.utility.UtilEvent;
@@ -25,7 +24,8 @@ import java.util.List;
  * <p>Implements {@link Plugin} from the hierarchy framework, bridging the Velocity proxy
  * lifecycle with the component-based architecture. Automatically handles registration and
  * teardown of listeners and commands as components are initialized and shut down through the
- * hierarchy. Subcommands register themselves against their parent command on construction.</p>
+ * hierarchy. Subcommands are attached to their parent command as each component is initialized,
+ * and commands are registered with the proxy only once every component has been processed.</p>
  *
  * <p>Concrete plugins extend this class and supply a constructor annotated with
  * {@code @Inject}, forwarding the injected {@link ProxyServer} and {@code @DataDirectory}
@@ -34,11 +34,15 @@ import java.util.List;
  * initialize and shutdown events.</p>
  */
 @Getter
-public class VelocityPlugin implements Plugin, IVelocityPlugin {
+public class VelocityPlugin implements Plugin {
 
     private final ProxyServer proxyServer;
     private final Path dataDirectory;
 
+    /**
+     * Commands awaiting registration with the proxy, collected during component
+     * initialization and drained by {@link #processComponents()}.
+     */
     private final List<BaseCommand<?, ?, ?>> pendingBaseCommands = new ArrayList<>();
 
     /**
@@ -64,9 +68,14 @@ public class VelocityPlugin implements Plugin, IVelocityPlugin {
     }
 
     /**
-     * Initializes the plugin by running the hierarchy lifecycle via
-     * {@link Plugin#initializePlugin()}, dispatching a {@link PluginInitializeEvent} to notify
-     * listeners that the plugin is fully initialized, then registering it as an internal plugin.
+     * Initializes the plugin.
+     *
+     * <p>Registers this plugin as an internal plugin first, so components resolving it during
+     * their own initialization see it, then runs the hierarchy lifecycle via
+     * {@link Plugin#initializePlugin()}. Once every component has been processed,
+     * {@link #processComponents()} registers the collected commands with the proxy and a
+     * {@link PluginInitializeEvent} is dispatched to notify listeners that the plugin is fully
+     * initialized.</p>
      */
     @Override
     public void initializePlugin() {
@@ -98,12 +107,14 @@ public class VelocityPlugin implements Plugin, IVelocityPlugin {
      *
      * <p>Delegates to {@link Plugin#onComponentInitialize(Object)} to invoke
      * {@link io.github.trae.hf.Frame#initializeFrame()}, then performs automatic Velocity
-     * registration based on the component type:</p>
+     * handling based on the component type:</p>
      * <ul>
      *     <li>{@link Listener} — registered with the proxy's {@code EventManager}</li>
-     *     <li>{@link BaseCommand} — registered with the proxy's {@code CommandManager} under its
-     *         {@link CommandMeta} and a freshly built {@link BaseCommand#generateBrigadierCommand()
-     *         BrigadierCommand}</li>
+     *     <li>{@link BaseCommand} — queued for registration by {@link #processComponents()};
+     *         registration is deferred so the {@link BaseCommand#generateBrigadierCommand()
+     *         BrigadierCommand} node tree is built after every subcommand has attached itself</li>
+     *     <li>{@link BaseSubCommand} — attached to its parent command via
+     *         {@link io.github.trae.velocity.framework.command.interfaces.IBaseCommand#$addSubCommand}</li>
      * </ul>
      *
      * @param instance the component being initialized
@@ -121,7 +132,7 @@ public class VelocityPlugin implements Plugin, IVelocityPlugin {
         }
 
         if (instance instanceof final BaseSubCommand<?, ?, ?> baseSubCommand) {
-            baseSubCommand.getModule().$addSubCommand(baseSubCommand);
+            baseSubCommand.getParent().$addSubCommand(baseSubCommand);
         }
     }
 
@@ -133,7 +144,10 @@ public class VelocityPlugin implements Plugin, IVelocityPlugin {
      * {@link io.github.trae.hf.Frame#shutdownFrame()}:</p>
      * <ul>
      *     <li>{@link Listener} — unregistered from the proxy's {@code EventManager}</li>
-     *     <li>{@link BaseCommand} — unregistered from the proxy's {@code CommandManager}</li>
+     *     <li>{@link BaseCommand} — unregistered from the proxy's {@code CommandManager} under its
+     *         {@link CommandMeta}</li>
+     *     <li>{@link BaseSubCommand} — detached from its parent command via
+     *         {@link io.github.trae.velocity.framework.command.interfaces.IBaseCommand#$removeSubCommand}</li>
      * </ul>
      *
      * @param instance the component being shut down
@@ -149,13 +163,20 @@ public class VelocityPlugin implements Plugin, IVelocityPlugin {
         }
 
         if (instance instanceof final BaseSubCommand<?, ?, ?> baseSubCommand) {
-            baseSubCommand.getModule().$removeSubCommand(baseSubCommand);
+            baseSubCommand.getParent().$removeSubCommand(baseSubCommand);
         }
 
         Plugin.super.onComponentShutdown(instance);
     }
 
-    @Override
+    /**
+     * Registers every queued command with the proxy's {@code CommandManager} under its
+     * {@link CommandMeta} and a freshly built {@link BaseCommand#generateBrigadierCommand()
+     * BrigadierCommand}, then clears the queue.
+     *
+     * <p>Runs after the hierarchy has initialized every component, so each command's node tree
+     * includes all subcommands that attached themselves during initialization.</p>
+     */
     public void processComponents() {
         this.pendingBaseCommands.forEach(baseCommand -> this.proxyServer.getCommandManager().register(baseCommand.getCommandMeta(), baseCommand.generateBrigadierCommand()));
         this.pendingBaseCommands.clear();

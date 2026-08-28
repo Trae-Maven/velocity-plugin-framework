@@ -1,7 +1,7 @@
 package io.github.trae.velocity.framework.command;
 
 import com.velocitypowered.api.command.CommandSource;
-import io.github.trae.hf.SubModule;
+import io.github.trae.hf.Node;
 import io.github.trae.velocity.framework.VelocityPlugin;
 import io.github.trae.velocity.framework.command.interfaces.SharedBaseCommand;
 import lombok.AllArgsConstructor;
@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Abstract base class for subcommands belonging to a {@link BaseCommand}.
  *
- * <p>Combines {@link SubModule} and {@link SharedBaseCommand} to provide a typed subcommand with
+ * <p>Combines {@link Node} and {@link SharedBaseCommand} to provide a typed subcommand with
  * its own sender validation, permission check, and tab-complete logic. Registration against the
  * parent command is handled by the plugin's component lifecycle
  * ({@link VelocityPlugin#onComponentInitialize(Object)} calls
@@ -25,7 +25,7 @@ import java.util.List;
  */
 @AllArgsConstructor
 @Getter
-public abstract class BaseSubCommand<Plugin extends VelocityPlugin, ParentCommand extends BaseCommand<Plugin, ?, ?>, Sender extends CommandSource> implements SubModule<Plugin, ParentCommand>, SharedBaseCommand<Sender> {
+public abstract class BaseSubCommand<Plugin extends VelocityPlugin, ParentCommand extends BaseCommand<Plugin, ?, ?>, Sender extends CommandSource> implements Node<Plugin, ParentCommand>, SharedBaseCommand<Sender> {
 
     private final String label, description;
     private final List<String> aliases;
@@ -52,6 +52,6 @@ public abstract class BaseSubCommand<Plugin extends VelocityPlugin, ParentComman
      */
     @Override
     public String getUsage() {
-        return "%s %s".formatted(this.getModule().getUsage(), this.getLabel());
+        return "%s %s".formatted(this.getParent().getUsage(), this.getLabel());
     }
 }

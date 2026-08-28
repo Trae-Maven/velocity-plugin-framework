@@ -12,7 +12,7 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
 import io.github.trae.hf.Manager;
-import io.github.trae.hf.Module;
+import io.github.trae.hf.Node;
 import io.github.trae.velocity.framework.VelocityPlugin;
 import io.github.trae.velocity.framework.command.constants.DefaultSuggestions;
 import io.github.trae.velocity.framework.command.interfaces.IBaseCommand;
@@ -31,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Abstract base class for top-level commands in the framework.
  *
- * <p>Combines {@link Module} from the hierarchy framework with {@link SharedBaseCommand} and
+ * <p>Combines {@link Node} from the hierarchy framework with {@link SharedBaseCommand} and
  * {@link IBaseCommand} to provide a typed command that owns a registry of {@link BaseSubCommand}s.
  * On construction it eagerly builds the {@link CommandMeta} used for registration; the
  * {@link BrigadierCommand} node tree is built lazily at registration time via
@@ -43,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
  * @param <Sender>          the expected {@link CommandSource} type
  */
 @Getter
-public abstract class BaseCommand<Plugin extends VelocityPlugin, VelocityManager extends Manager<Plugin>, Sender extends CommandSource> implements Module<Plugin, VelocityManager>, SharedBaseCommand<Sender>, IBaseCommand, Listener {
+public abstract class BaseCommand<Plugin extends VelocityPlugin, VelocityManager extends Manager<Plugin>, Sender extends CommandSource> implements Node<Plugin, VelocityManager>, SharedBaseCommand<Sender>, IBaseCommand, Listener {
 
     private final String label, description;
     private final List<String> aliases;
