@@ -168,17 +168,13 @@ once every subcommand has attached:
 @Component
 public class AdminSubCommand extends BaseSubCommand<CorePlugin, AccountCommand, Player> {
 
-    private final AccountManager accountManager;
-
-    public AdminSubCommand(final AccountManager accountManager) {
+    public AdminSubCommand() {
         super("admin", "Toggle Admin Mode", Collections.emptyList(), "core.commands.account.admin");
-
-        this.accountManager = accountManager;
     }
 
     @Override
     public void execute(final Player player, final String[] args) {
-        this.accountManager.getAccountByPlayer(player).ifPresent(account -> {
+        this.getParent().getParent().getAccountByPlayer(player).ifPresent(account -> {
             if (account.isAdministrating()) {
                 account.setAdministrating(false);
 
