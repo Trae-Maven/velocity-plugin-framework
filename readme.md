@@ -139,7 +139,7 @@ public class CorePlugin extends VelocityPlugin {
 Extend `BaseCommand` with the appropriate sender type. The second type parameter names the owning
 Manager, which the command resolves through `getParent()`. Permission is passed via the constructor:
 ```java
-@Component
+@Singleton
 public class AccountCommand extends BaseCommand<CorePlugin, AccountManager, CommandSource> {
 
     public AccountCommand() {
@@ -165,7 +165,7 @@ automatically as each component is initialized, and the parent's Brigadier node 
 once every subcommand has attached:
 
 ```java
-@Component
+@Singleton
 public class AdminSubCommand extends BaseSubCommand<CorePlugin, AccountCommand, Player> {
 
     public AdminSubCommand() {
@@ -293,7 +293,7 @@ public class NetworkJoinEvent extends CustomCancellableEvent {
 
 Listen for it on any component implementing `Listener`:
 ```java
-@Component
+@Singleton
 public class NetworkListener implements Listener {
 
     @Subscribe(order = EventPriority.HIGH)
