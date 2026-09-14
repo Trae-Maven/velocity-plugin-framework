@@ -9,8 +9,8 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Utility class for dispatching framework {@link Event}s through Velocity's event bus.
  *
- * <p>Provides fire-and-forget dispatch via {@link #dispatchAsynchronous} and future-returning
- * dispatch via {@link #supplyAsynchronous}, whose future completes after all handlers finish. Each
+ * <p>Provides fire-and-forget dispatch via {@link #dispatch} and future-returning
+ * dispatch via {@link #supply}, whose future completes after all handlers finish. Each
  * has an overload that resolves the owning plugin from {@link UtilPlugin#getInstance()} when not
  * supplied explicitly.</p>
  */
@@ -25,7 +25,7 @@ public class UtilEvent {
      * @param <T>            the event type
      * @throws IllegalArgumentException if {@code velocityPlugin} or {@code event} is {@code null}
      */
-    public static <T extends Event> void dispatchAsynchronous(final VelocityPlugin velocityPlugin, final T event) {
+    public static <T extends Event> void dispatch(final VelocityPlugin velocityPlugin, final T event) {
         if (velocityPlugin == null) {
             throw new IllegalArgumentException("Velocity Plugin cannot be null.");
         }
@@ -42,10 +42,10 @@ public class UtilEvent {
      *
      * @param event the event to fire
      * @param <T>   the event type
-     * @see #dispatchAsynchronous(VelocityPlugin, Event)
+     * @see #dispatch(VelocityPlugin, Event)
      */
-    public static <T extends Event> void dispatchAsynchronous(final T event) {
-        dispatchAsynchronous(UtilPlugin.getInstance(), event);
+    public static <T extends Event> void dispatch(final T event) {
+        dispatch(UtilPlugin.getInstance(), event);
     }
 
     /**
@@ -62,7 +62,7 @@ public class UtilEvent {
      * @return a future completing with the same event instance after all handlers have been invoked
      * @throws IllegalArgumentException if {@code velocityPlugin} or {@code event} is {@code null}
      */
-    public static <R extends Event> CompletableFuture<R> supplyAsynchronous(final VelocityPlugin velocityPlugin, final R event) {
+    public static <R extends Event> CompletableFuture<R> supply(final VelocityPlugin velocityPlugin, final R event) {
         if (velocityPlugin == null) {
             throw new IllegalArgumentException("Velocity Plugin cannot be null.");
         }
@@ -80,9 +80,9 @@ public class UtilEvent {
      * @param event the event to fire
      * @param <R>   the event type
      * @return a future completing with the same event instance after all handlers have been invoked
-     * @see #supplyAsynchronous(VelocityPlugin, Event)
+     * @see #supply(VelocityPlugin, Event)
      */
-    public static <R extends Event> CompletableFuture<R> supplyAsynchronous(final R event) {
-        return supplyAsynchronous(UtilPlugin.getInstance(), event);
+    public static <R extends Event> CompletableFuture<R> supply(final R event) {
+        return supply(UtilPlugin.getInstance(), event);
     }
 }

@@ -209,16 +209,16 @@ This registers `/account admin` automatically — the parent `AccountCommand` ro
 ### Event Dispatch
 
 Use `UtilEvent` for event dispatch. Velocity's event bus is uniformly asynchronous-capable, so
-there is no synchronous/asynchronous distinction — `dispatchAsynchronous` fires and forgets,
+there is no synchronous/asynchronous distinction — `dispatch` fires and forgets,
 while `supply` fires and blocks until all handlers finish, returning the event for inspection:
 ```java
 // Fire and forget
-UtilEvent.dispatchAsynchronous(new MyEvent());
+UtilEvent.dispatch(new MyEvent());
 
 // Fire and inspect after all handlers run
-MyEvent event = UtilEvent.supplyAsynchronous(new MyEvent());
+MyEvent event = UtilEvent.supply(new MyEvent());
 if (event.isCancelled()) {
-        return;
+    return;
 }
 ```
 
@@ -230,22 +230,22 @@ thread, everything else schedules onto the pool:
 ```java
 // Execute inline on the calling thread
 UtilTask.execute(() -> {
-        // immediate work
+    // immediate work
 });
 
 // Schedule onto the proxy's thread pool
 UtilTask.executeAsynchronous(() -> {
-        // background work or I/O
+    // background work or I/O
 });
 
 // Delayed task
 UtilTask.executeLaterAsynchronous(() -> {
-        player.sendMessage(Component.text("5 seconds later"));
+    player.sendMessage(Component.text("5 seconds later"));
 }, 5, ChronoUnit.SECONDS);
 
 // Repeating task with cancellation
 UtilTask.scheduleAsynchronous(() -> {
-        // periodic work
+    // periodic work
 }, 0, 5, ChronoUnit.SECONDS, () -> !player.isActive());
 ```
 
@@ -316,7 +316,7 @@ if (event.isCancelled()) {
 > **Note:** `CustomCancellableEvent` adapts Velocity's `ResultedEvent<GenericResult>` to a
 > boolean cancelled flag — a denied result is treated as cancelled. Cancellation is only
 > observed by callers that use `UtilEvent.supply` (which blocks for handlers); a
-> `dispatchAsynchronous` fire-and-forget cannot observe cancellation.
+> `dispatch` fire-and-forget cannot observe cancellation.
 
 ### Event Priority
 

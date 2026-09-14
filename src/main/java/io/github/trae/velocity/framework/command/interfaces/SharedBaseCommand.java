@@ -128,7 +128,7 @@ public interface SharedBaseCommand<Sender extends CommandSource> {
             return false;
         }
 
-        if (UtilEvent.supplyAsynchronous(new CommandExecuteEvent(this, commandSource)).isCancelled()) {
+        if (UtilEvent.supply(new CommandExecuteEvent(this, commandSource)).isCancelled()) {
             return false;
         }
 
@@ -155,7 +155,7 @@ public interface SharedBaseCommand<Sender extends CommandSource> {
             return Collections.emptyList();
         }
 
-        if (UtilEvent.supplyAsynchronous(new CommandTabCompleteEvent(this, commandSource)).isCancelled()) {
+        if (UtilEvent.supply(new CommandTabCompleteEvent(this, commandSource)).isCancelled()) {
             return Collections.emptyList();
         }
 

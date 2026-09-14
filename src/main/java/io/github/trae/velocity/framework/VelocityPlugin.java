@@ -6,6 +6,8 @@ import io.github.trae.di.InjectorApi;
 import io.github.trae.hf.Plugin;
 import io.github.trae.velocity.framework.command.BaseCommand;
 import io.github.trae.velocity.framework.command.BaseSubCommand;
+import io.github.trae.velocity.framework.config.events.ConfigReloadEvent;
+import io.github.trae.velocity.framework.config.events.ConfigSaveEvent;
 import io.github.trae.velocity.framework.event.interfaces.Listener;
 import io.github.trae.velocity.framework.plugin.events.PluginInitializeEvent;
 import io.github.trae.velocity.framework.plugin.events.PluginShutdownEvent;
@@ -36,6 +38,10 @@ import java.util.List;
 @Getter
 public class VelocityPlugin implements Plugin {
 
+    /**
+     * The proxy this plugin is running on, and the directory its configs live in. Both injected
+     * by the concrete plugin and forwarded here.
+     */
     private final ProxyServer proxyServer;
     private final Path dataDirectory;
 
@@ -49,10 +55,18 @@ public class VelocityPlugin implements Plugin {
      * Creates a new {@link VelocityPlugin} and configures the dependency injection framework
      * for this application.
      *
-     * <p>Registers this plugin's data directory as the configuration directory for
-     * {@link io.github.trae.di.configuration.annotations.Configuration @Configuration} file
-     * resolution, and sets up the per-application executors used to dispatch
-     * {@link io.github.trae.di.annotations.method.Scheduler @Scheduler} tasks via {@link UtilTask}.</p>
+     * <p>Points {@link io.github.trae.di.configuration.annotations.Configuration @Configuration}
+     * file resolution at this plugin's data directory, so each plugin's configs land beside its
+     * own jar rather than in a shared location, and registers the save and reload callbacks that
+     * turn a config write into a {@link ConfigSaveEvent} or {@link ConfigReloadEvent} other
+     * components can listen for.</p>
+     *
+     * <p>The two executors are what {@link io.github.trae.di.annotations.method.Scheduler @Scheduler}
+     * tasks are dispatched through. They are registered per application rather than globally, so a
+     * scheduled task belongs to the plugin that declared it and stops with it.</p>
+     *
+     * <p>Everything here is keyed on the concrete subclass rather than on {@code VelocityPlugin},
+     * so two plugins built on the framework do not overwrite each other's registrations.</p>
      *
      * @param proxyServer   the proxy server instance, injected by the concrete plugin
      * @param dataDirectory the plugin's data directory, injected by the concrete plugin
@@ -62,6 +76,9 @@ public class VelocityPlugin implements Plugin {
         this.dataDirectory = dataDirectory;
 
         InjectorApi.setConfigurationDirectory(this.getClass(), dataDirectory);
+
+        InjectorApi.setConfigurationSaveCallback(this.getClass(), configurationClass -> UtilEvent.dispatch(new ConfigSaveEvent(this, configurationClass)));
+        InjectorApi.setConfigurationReloadCallback(this.getClass(), configurationClass -> UtilEvent.dispatch(new ConfigReloadEvent(this, configurationClass)));
 
         InjectorApi.setSynchronousExecutor(this.getClass(), UtilTask::execute);
         InjectorApi.setAsynchronousExecutor(this.getClass(), UtilTask::executeAsynchronous);
@@ -85,7 +102,7 @@ public class VelocityPlugin implements Plugin {
 
         this.processComponents();
 
-        UtilEvent.dispatchAsynchronous(this, new PluginInitializeEvent(this));
+        UtilEvent.dispatch(this, new PluginInitializeEvent(this));
     }
 
     /**
@@ -95,7 +112,7 @@ public class VelocityPlugin implements Plugin {
      */
     @Override
     public void shutdownPlugin() {
-        UtilEvent.dispatchAsynchronous(this, new PluginShutdownEvent(this));
+        UtilEvent.dispatch(this, new PluginShutdownEvent(this));
 
         Plugin.super.shutdownPlugin();
 
