@@ -7,29 +7,29 @@ import io.github.trae.velocity.framework.command.events.CommandExecuteEvent;
 import io.github.trae.velocity.framework.command.events.CommandTabCompleteEvent;
 import io.github.trae.velocity.framework.utility.UtilEvent;
 import io.github.trae.velocity.framework.utility.UtilMessage;
+import io.github.trae.velocity.framework.utility.UtilPermission;
 
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Shared contract for commands and subcommands, providing sender validation, permission
- * checking, event dispatch, and the gated execution and tab-complete entry points.
- *
- * <p>The {@code $}-prefixed methods ({@link #$execute} and {@link #$getTabComplete}) are the
- * framework-internal entry points invoked from the command's Brigadier node callbacks. They perform
- * sender, permission, and event-cancellation gating before delegating to the user-facing
- * {@link #execute} and {@link #getTabComplete} methods.</p>
+ * Shared contract for both {@link io.github.trae.velocity.framework.command.BaseCommand} and
+ * {@link io.github.trae.velocity.framework.command.BaseSubCommand}, providing sender validation,
+ * permission checks, event dispatching, and execution routing.
  *
  * @param <Sender> the expected {@link CommandSource} type for this command
  */
 public interface SharedBaseCommand<Sender extends CommandSource> {
 
     /**
-     * Resolves the runtime {@link Class} of this command's {@code Sender} type parameter via
-     * reflection over the generic hierarchy.
+     * Resolves the generic {@link CommandSource} type parameter declared on the implementing class.
+     * <p>
+     * Uses {@link UtilGeneric#getGenericParameter} to reflectively extract the first type argument
+     * of {@link SharedBaseCommand} from the concrete class. The result is used for sender validation
+     * and casting in {@link #isValidSender} and {@link #$execute}.
      *
-     * @return the class of the expected command sender type
-     * @throws IllegalStateException if the sender type could not be resolved
+     * @return the resolved {@link Class} of {@code Sender}
+     * @throws IllegalStateException if the generic parameter cannot be resolved
      */
     @SuppressWarnings("unchecked")
     default Class<Sender> getClassOfCommandSender() {
@@ -49,81 +49,100 @@ public interface SharedBaseCommand<Sender extends CommandSource> {
     String getLabel();
 
     /**
-     * Returns a short description of this command.
+     * Returns a short description of what this command does.
      *
      * @return the command description
      */
     String getDescription();
 
     /**
-     * Returns the alternative labels that can be used to invoke this command.
+     * Returns the list of alternative labels that can also invoke this command.
      *
      * @return the command aliases
      */
     List<String> getAliases();
 
     /**
-     * Returns the permission node required to use this command, or {@code null} if none.
+     * Returns the permission node required to execute this command, or {@code null} if no
+     * permission is required.
      *
-     * @return the permission node, or {@code null} if unrestricted
+     * @return the permission node, or {@code null}
      */
     String getPermission();
 
     /**
-     * Tests whether the given source is of the expected {@link #getClassOfCommandSender() sender type}.
+     * Returns whether the given {@link CommandSource} is an instance of the expected sender type.
+     * <p>
+     * Delegates to {@link #getClassOfCommandSender()} for the type check.
      *
-     * @param commandSource the source to test
-     * @return {@code true} if the source is a valid sender type for this command
+     * @param commandSource the source to validate
+     * @return {@code true} if the source matches the expected type
      */
     default boolean isValidSender(final CommandSource commandSource) {
         return this.getClassOfCommandSender().isInstance(commandSource);
     }
 
     /**
-     * Tests whether the given source holds the {@link #getPermission() required permission}.
+     * Checks whether the specified {@link CommandSource} has permission to execute this command.
      *
-     * @param commandSource the source to test
-     * @return {@code true} if no permission is required, or the source holds it
+     * <p>This check delegates to {@link UtilPermission#hasPermission} using the permission
+     * returned by {@link #getPermission()}.</p>
+     *
+     * @param commandSource the command source to check
+     * @return {@code true} if the command source is permitted to execute this command,
+     * otherwise {@code false}
      */
     default boolean hasPermission(final CommandSource commandSource) {
-        return this.getPermission() == null || commandSource.hasPermission(this.getPermission());
+        return UtilPermission.hasPermission(commandSource, this.getPermission());
     }
 
     /**
-     * Executes this command. Invoked by {@link #$execute} after all gating checks pass.
+     * Executes the command logic for the given typed sender and arguments.
+     * <p>
+     * Only called after sender validation, permission checks, and event dispatch have all passed
+     * in {@link #$execute}. Implementations should not repeat those checks here.
      *
-     * @param sender the validated sender, cast to the expected type
-     * @param args   the command arguments
+     * @param sender the validated and cast sender
+     * @param args   the remaining command arguments
      */
     void execute(final Sender sender, final String[] args);
 
     /**
-     * Provides tab-complete suggestions for this command. Invoked by {@link #$getTabComplete}
-     * after all gating checks pass. Defaults to an empty list.
+     * Returns tab-complete suggestions for the given typed sender and arguments.
+     * <p>
+     * Only called after sender validation, permission checks, and event dispatch have all passed
+     * in {@link #$getTabComplete}. Returns an empty list by default.
      *
-     * @param sender the validated sender, cast to the expected type
+     * @param sender the validated and cast sender
      * @param args   the current argument input
-     * @return the suggestion list
+     * @return a list of suggestions, or an empty list if none
      */
     default List<String> getTabComplete(final Sender sender, final String[] args) {
         return Collections.emptyList();
     }
 
     /**
-     * Framework-internal execution entry point. Validates the sender type and permission, fires a
-     * cancellable {@link CommandExecuteEvent}, and delegates to {@link #execute} if all checks pass.
+     * Internal execution entry point called from this command's Brigadier node callbacks.
+     * <p>
+     * Performs the following checks in order before delegating to {@link #execute}:
+     * <ol>
+     *   <li>Validates the sender type via {@link #isValidSender}</li>
+     *   <li>Checks permission via {@link #hasPermission}</li>
+     *   <li>Fires a cancellable {@link CommandExecuteEvent} via {@link UtilEvent#supply}</li>
+     * </ol>
+     * If any check fails or the event is cancelled, execution is aborted and {@code false} is returned.
      *
-     * @param commandSource the source attempting execution
+     * @param commandSource the raw source from Velocity
      * @param args          the command arguments
-     * @return {@code true} if the command was executed, {@code false} if any gating check failed
+     * @return {@code true} if the command was executed successfully, {@code false} otherwise
      */
     default boolean $execute(final CommandSource commandSource, final String[] args) {
-        if (!(this.isValidSender(commandSource))) {
+        if (!this.isValidSender(commandSource)) {
             UtilMessage.message(commandSource, "Command", "Invalid Command Sender!");
             return false;
         }
 
-        if (!(this.hasPermission(commandSource))) {
+        if (!this.hasPermission(commandSource)) {
             UtilMessage.message(commandSource, "Permissions", "You do not have permission to execute this command!");
             return false;
         }
@@ -133,25 +152,30 @@ public interface SharedBaseCommand<Sender extends CommandSource> {
         }
 
         this.execute(UtilJava.cast(this.getClassOfCommandSender(), commandSource), args);
-
         return true;
     }
 
     /**
-     * Framework-internal tab-complete entry point. Validates the sender type and permission, fires a
-     * cancellable {@link CommandTabCompleteEvent}, and delegates to {@link #getTabComplete} if all
-     * checks pass.
+     * Internal tab-complete entry point called from this command's Brigadier node callbacks.
+     * <p>
+     * Performs the following checks in order before delegating to {@link #getTabComplete}:
+     * <ol>
+     *   <li>Validates the sender type via {@link #isValidSender}</li>
+     *   <li>Checks permission via {@link #hasPermission}</li>
+     *   <li>Fires a cancellable {@link CommandTabCompleteEvent} via {@link UtilEvent#supply}</li>
+     * </ol>
+     * Returns an empty list if any check fails or the event is cancelled.
      *
-     * @param commandSource the source requesting suggestions
+     * @param commandSource the raw source from Velocity
      * @param args          the current argument input
-     * @return the suggestion list, or an empty list if any gating check failed
+     * @return a list of suggestions, or an empty list if blocked
      */
     default List<String> $getTabComplete(final CommandSource commandSource, final String[] args) {
-        if (!(this.isValidSender(commandSource))) {
+        if (!this.isValidSender(commandSource)) {
             return Collections.emptyList();
         }
 
-        if (!(this.hasPermission(commandSource))) {
+        if (!this.hasPermission(commandSource)) {
             return Collections.emptyList();
         }
 
