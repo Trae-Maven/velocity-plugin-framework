@@ -9,19 +9,19 @@ import io.github.trae.velocity.framework.utility.search.VelocitySearchEngine;
 import java.util.Locale;
 
 /**
- * Search engine resolving players connected anywhere on the network.
+ * Search engine resolving players connected anywhere on the proxy.
  *
  * <p>Candidates are read live from {@link UtilServer#getOnlinePlayers()} on every search, so the
  * scope is every player on the proxy rather than one backend server, and matched on username:
  * case-insensitive equality for an exact hit, case-insensitive substring for a partial one.</p>
  */
-public class NetworkPlayerSearchEngine extends VelocitySearchEngine<Player> {
+public class ProxyPlayerSearchEngine extends VelocitySearchEngine<Player> {
 
     /**
      * Creates a search engine over the connected player set.
      */
-    public NetworkPlayerSearchEngine() {
-        super("Network Player Search", UtilServer::getOnlinePlayers);
+    public ProxyPlayerSearchEngine() {
+        super("Proxy Player Search", UtilServer::getOnlinePlayers);
     }
 
     /**

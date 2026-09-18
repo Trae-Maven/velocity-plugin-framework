@@ -2,7 +2,7 @@ package io.github.trae.velocity.framework.utility;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import io.github.trae.velocity.framework.utility.search.types.NetworkPlayerSearchEngine;
+import io.github.trae.velocity.framework.utility.search.types.ProxyPlayerSearchEngine;
 import lombok.experimental.UtilityClass;
 
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ import java.util.function.Predicate;
 /**
  * Utility methods for querying the state of the proxy.
  *
- * <p>Covers network-wide player lookups by unique id, username, and user-supplied search input, plus
+ * <p>Covers proxy-wide player lookups by unique id, username, and user-supplied search input, plus
  * filtered snapshots of the connected player set. Every lookup is served through the proxy handle on
  * the first registered plugin, so these helpers are only usable once a plugin has registered itself
  * with {@link UtilPlugin}.</p>
@@ -25,7 +25,7 @@ public class UtilServer {
     /**
      * Search engine backing the {@code searchPlayer} helpers.
      */
-    private static final NetworkPlayerSearchEngine PLAYER_SEARCH_ENGINE = new NetworkPlayerSearchEngine();
+    private static final ProxyPlayerSearchEngine PLAYER_SEARCH_ENGINE = new ProxyPlayerSearchEngine();
 
     /**
      * Returns the players currently connected to the proxy, optionally filtered by a predicate.
