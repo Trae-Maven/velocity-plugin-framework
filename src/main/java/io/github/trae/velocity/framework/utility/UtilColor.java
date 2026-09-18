@@ -2,6 +2,7 @@ package io.github.trae.velocity.framework.utility;
 
 import io.github.trae.velocity.framework.utility.enums.ChatColor;
 import lombok.experimental.UtilityClass;
+import net.kyori.adventure.text.format.TextColor;
 
 import java.awt.Color;
 
@@ -38,5 +39,22 @@ public class UtilColor {
         }
 
         return "<%s>%s</%s>".formatted(colorTag, string, colorTag);
+    }
+
+    /**
+     * Converts an AWT colour to its Adventure equivalent, discarding the alpha channel.
+     *
+     * <p>Adventure has no notion of transparency in text, so the alpha byte is masked off
+     * rather than approximated.</p>
+     *
+     * @param color the colour to convert
+     * @return the equivalent {@link TextColor}
+     */
+    public static TextColor toTextColor(final Color color) {
+        if (color == null) {
+            return null;
+        }
+
+        return TextColor.color(color.getRGB() & 0xFFFFFF);
     }
 }
