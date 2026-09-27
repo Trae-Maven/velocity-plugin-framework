@@ -11,7 +11,7 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -271,7 +271,7 @@ public class UtilMessage {
      * @param message the pre-built body component
      * @param ignored UUIDs to skip, or {@code null} to send to all
      */
-    public static void message(final Collection<? extends Player> players, final Component prefix, final Component message, final List<UUID> ignored) {
+    public static void message(final Collection<? extends Player> players, final Component prefix, final Component message, final Set<UUID> ignored) {
         for (final Player player : players) {
             if (ignored != null && ignored.contains(player.getUniqueId())) {
                 continue;
@@ -290,7 +290,7 @@ public class UtilMessage {
      * @param message the pre-built body component
      * @param ignored UUIDs to skip, or {@code null} to send to all
      */
-    public static void message(final Collection<? extends Player> players, final String prefix, final Component message, final List<UUID> ignored) {
+    public static void message(final Collection<? extends Player> players, final String prefix, final Component message, final Set<UUID> ignored) {
         for (final Player player : players) {
             if (ignored != null && ignored.contains(player.getUniqueId())) {
                 continue;
@@ -309,7 +309,7 @@ public class UtilMessage {
      * @param message the raw MiniMessage body
      * @param ignored UUIDs to skip, or {@code null} to send to all
      */
-    public static void message(final Collection<? extends Player> players, final Component prefix, final String message, final List<UUID> ignored) {
+    public static void message(final Collection<? extends Player> players, final Component prefix, final String message, final Set<UUID> ignored) {
         for (final Player player : players) {
             if (ignored != null && ignored.contains(player.getUniqueId())) {
                 continue;
@@ -328,7 +328,7 @@ public class UtilMessage {
      * @param message the raw MiniMessage body
      * @param ignored UUIDs to skip, or {@code null} to send to all
      */
-    public static void message(final Collection<? extends Player> players, final String prefix, final String message, final List<UUID> ignored) {
+    public static void message(final Collection<? extends Player> players, final String prefix, final String message, final Set<UUID> ignored) {
         for (final Player player : players) {
             if (ignored != null && ignored.contains(player.getUniqueId())) {
                 continue;
@@ -351,7 +351,7 @@ public class UtilMessage {
      * @param message the pre-built body component
      * @param ignored UUIDs to skip, or {@code null} to send to all
      */
-    public static void broadcast(final Component prefix, final Component message, final List<UUID> ignored) {
+    public static void broadcast(final Component prefix, final Component message, final Set<UUID> ignored) {
         message(UtilPlugin.getInstance().getProxyServer().getAllPlayers(), prefix, message, ignored);
 
         if (broadcastForConsole) {
@@ -379,7 +379,7 @@ public class UtilMessage {
      * @param message the pre-built body component
      * @param ignored UUIDs to skip, or {@code null} to send to all
      */
-    public static void broadcast(final String prefix, final Component message, final List<UUID> ignored) {
+    public static void broadcast(final String prefix, final Component message, final Set<UUID> ignored) {
         message(UtilPlugin.getInstance().getProxyServer().getAllPlayers(), prefix, message, ignored);
 
         if (broadcastForConsole) {
@@ -405,7 +405,7 @@ public class UtilMessage {
      * @param message the component to broadcast
      * @param ignored UUIDs to skip, or {@code null} to send to all
      */
-    public static void broadcast(final Component message, final List<UUID> ignored) {
+    public static void broadcast(final Component message, final Set<UUID> ignored) {
         broadcast((String) null, message, ignored);
     }
 
@@ -428,7 +428,7 @@ public class UtilMessage {
      * @param message the raw MiniMessage body
      * @param ignored UUIDs to skip, or {@code null} to send to all
      */
-    public static void broadcast(final Component prefix, final String message, final List<UUID> ignored) {
+    public static void broadcast(final Component prefix, final String message, final Set<UUID> ignored) {
         message(UtilPlugin.getInstance().getProxyServer().getAllPlayers(), prefix, message, ignored);
 
         if (broadcastForConsole) {
@@ -456,7 +456,7 @@ public class UtilMessage {
      * @param message the raw MiniMessage body
      * @param ignored UUIDs to skip, or {@code null} to send to all
      */
-    public static void broadcast(final String prefix, final String message, final List<UUID> ignored) {
+    public static void broadcast(final String prefix, final String message, final Set<UUID> ignored) {
         message(UtilPlugin.getInstance().getProxyServer().getAllPlayers(), prefix, message, ignored);
 
         if (broadcastForConsole) {
@@ -482,7 +482,7 @@ public class UtilMessage {
      * @param message the raw MiniMessage string
      * @param ignored UUIDs to skip, or {@code null} to send to all
      */
-    public static void broadcast(final String message, final List<UUID> ignored) {
+    public static void broadcast(final String message, final Set<UUID> ignored) {
         broadcast((String) null, message, ignored);
     }
 
