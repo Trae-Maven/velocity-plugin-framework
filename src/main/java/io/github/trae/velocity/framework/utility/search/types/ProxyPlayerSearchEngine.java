@@ -2,11 +2,11 @@ package io.github.trae.velocity.framework.utility.search.types;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import io.github.trae.velocity.framework.utility.UtilColor;
 import io.github.trae.velocity.framework.utility.UtilServer;
 import io.github.trae.velocity.framework.utility.enums.ChatColor;
 import io.github.trae.velocity.framework.utility.search.VelocitySearchEngine;
 
+import java.awt.Color;
 import java.util.Locale;
 
 /**
@@ -28,11 +28,21 @@ public class ProxyPlayerSearchEngine extends VelocitySearchEngine<Player> {
     /**
      * {@inheritDoc}
      *
-     * @return the player's username serialized in yellow
+     * <p>Returns the player's username.
      */
     @Override
-    protected String getTypeFormat(final Player player, final CommandSource commandSource) {
-        return UtilColor.serialize(ChatColor.YELLOW.getColor(), player.getUsername());
+    protected String getTypeName(final Player player, final CommandSource commandSource) {
+        return player.getUsername();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Every player is displayed in yellow.
+     */
+    @Override
+    protected Color getTypeColor(final Player player, final CommandSource commandSource) {
+        return ChatColor.YELLOW.getColor();
     }
 
     /**

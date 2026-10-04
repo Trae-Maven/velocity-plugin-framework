@@ -2,11 +2,11 @@ package io.github.trae.velocity.framework.utility.search.types;
 
 import com.velocitypowered.api.command.CommandSource;
 import io.github.trae.velocity.framework.VelocityPlugin;
-import io.github.trae.velocity.framework.utility.UtilColor;
 import io.github.trae.velocity.framework.utility.UtilPlugin;
 import io.github.trae.velocity.framework.utility.enums.ChatColor;
 import io.github.trae.velocity.framework.utility.search.VelocitySearchEngine;
 
+import java.awt.Color;
 import java.util.Locale;
 
 /**
@@ -28,11 +28,21 @@ public class InternalPluginSearchEngine extends VelocitySearchEngine<VelocityPlu
     /**
      * {@inheritDoc}
      *
-     * @return the plugin name serialized in yellow
+     * <p>Returns the plugin's registered name.
      */
     @Override
-    protected String getTypeFormat(final VelocityPlugin velocityPlugin, final CommandSource commandSource) {
-        return UtilColor.serialize(ChatColor.YELLOW.getColor(), velocityPlugin.getPluginName());
+    protected String getTypeName(final VelocityPlugin velocityPlugin, final CommandSource commandSource) {
+        return velocityPlugin.getPluginName();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Every plugin is displayed in yellow.
+     */
+    @Override
+    protected Color getTypeColor(final VelocityPlugin velocityPlugin, final CommandSource commandSource) {
+        return ChatColor.YELLOW.getColor();
     }
 
     /**
