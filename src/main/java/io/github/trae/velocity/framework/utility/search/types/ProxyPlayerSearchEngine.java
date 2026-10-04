@@ -1,5 +1,6 @@
 package io.github.trae.velocity.framework.utility.search.types;
 
+import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import io.github.trae.velocity.framework.utility.UtilColor;
 import io.github.trae.velocity.framework.utility.UtilServer;
@@ -30,7 +31,7 @@ public class ProxyPlayerSearchEngine extends VelocitySearchEngine<Player> {
      * @return the player's username serialized in yellow
      */
     @Override
-    protected String getTypeFormat(final Player player) {
+    protected String getTypeFormat(final Player player, final CommandSource commandSource) {
         return UtilColor.serialize(ChatColor.YELLOW.getColor(), player.getUsername());
     }
 
